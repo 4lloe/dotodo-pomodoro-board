@@ -38,19 +38,15 @@ export class AuthController {
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
       path: '/',
       expires: refreshExpires,
     });
   }
 
   private _setAccessTokenCookie(response: Response, accessToken: string) {
-    const accessExpirationStr = this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME'); // Assuming you have this in your config
+    const accessExpirationStr = this.configService.get<string>('JWT_ACCESS_EXPIRATION_TIME');
     if (!accessExpirationStr) {
-      // Default to a shorter lifespan if not configured, e.g., 15 minutes
-      // Or throw an error if it's critical to be configured
-      // For now, let's assume a default or handle error as per your app's needs
-      // This example will throw if not configured, similar to refresh token.
       throw new InternalServerErrorException('JWT_ACCESS_EXPIRATION_TIME is not configured.');
     }
     const accessExpiresInMs = ms(accessExpirationStr as any); 
@@ -62,9 +58,9 @@ export class AuthController {
     response.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      sameSite: this.configService.get<string>('NODE_ENV') === 'production' ? 'none' : 'lax',
       path: '/',
-      expires: accessExpires, // Set expiration for the access token cookie
+      expires: accessExpires,
     });
   }
 
@@ -138,17 +134,18 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(@Res({ passthrough: true }) response: Response) {
+    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
     response.cookie('access_token', '', { 
       httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/',
       expires: new Date(0),
     });
     response.cookie('refresh_token', '', {
       httpOnly: true,
-      secure: this.configService.get<string>('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       path: '/',
       expires: new Date(0),
     });

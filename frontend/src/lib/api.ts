@@ -28,10 +28,14 @@ async function apiFetch<T>(
     if (response.status === 401 && !skipTokenRefresh) {
       // Only try to refresh if it's not auth-related endpoints
       if (!endpoint.includes('/auth/')) {
-        const refreshed = await refreshToken();
-        if (refreshed) {
-          // Retry the original request
-          return apiFetch(endpoint, options, true);
+        try {
+          const refreshed = await refreshToken();
+          if (refreshed) {
+            // Retry the original request
+            return apiFetch(endpoint, options, true);
+          }
+        } catch (error) {
+          console.error('Token refresh failed:', error);
         }
       }
       
@@ -216,6 +220,7 @@ export interface PomodoroSession {
   endTime: string;
   duration: number;
   completed: boolean;
+  status: 'STARTED' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
 }
 
 export async function getPomodoroSessions() {
