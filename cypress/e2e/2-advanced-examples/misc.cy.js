@@ -40,6 +40,9 @@ context('Misc', () => {
     cy.exec('echo Jane Lane')
       .its('stdout').should('contain', 'Jane Lane')
 
+    // cy.exec('print cypress.config.js')
+    //   .its('stderr').should('be.empty');
+
     if (Cypress.platform === 'win32') {
       cy.exec(`print ${Cypress.config('configFile')}`)
         .its('stderr').should('be.empty')
